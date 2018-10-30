@@ -1,22 +1,14 @@
 // libs
+import { BotFrameworkAdapter, ConversationState, TurnContext } from 'botbuilder'
 import { Request, Response, Router } from 'express'
-import {
-  BotFrameworkAdapter,
-  ConversationState,
-  MemoryStorage,
-  TurnContext,
-} from 'botbuilder'
 
 type AppCredentials = { appId: string; appPassword: string }
 
-export function setupBotFrameworkAdapter(
+export function getBotFrameworkAdapter(
   appCredentials: AppCredentials,
-  memoryStorage: MemoryStorage,
+  conversationState: ConversationState,
 ): BotFrameworkAdapter {
   const adapter: BotFrameworkAdapter = new BotFrameworkAdapter(appCredentials)
-  const conversationState: ConversationState = new ConversationState(
-    memoryStorage,
-  )
 
   adapter.onTurnError = async (turnContext: TurnContext, error: Error) => {
     // This check writes out errors to console log .vs. app insights.
@@ -31,14 +23,24 @@ export function setupBotFrameworkAdapter(
   return adapter
 }
 
-export function setupIncomingMessagesRoute(
-  incomingMessagesController: (turnContext: TurnContext) => Promise<any>,
-  incomingMessagesRoutePath: string,
-  adapter: BotFrameworkAdapter,
+export type BotFrameworkConfig = {
+  appCredentials: AppCredentials
+  iMRoutePath: string
+}
+
+export function setupIMRoute(
+  botFrameworkConfig: BotFrameworkConfig,
+  conversationState: ConversationState,
+  iMController: (turnContext: TurnContext) => Promise<any>,
 ): Router {
+  const { iMRoutePath, appCredentials } = botFrameworkConfig
+  const adapter: BotFrameworkAdapter = getBotFrameworkAdapter(
+    appCredentials,
+    conversationState,
+  )
   const router = Router()
-  router.post(incomingMessagesRoutePath, (req: Request, res: Response) => {
-    adapter.processActivity(req, res, incomingMessagesController)
+  router.post(iMRoutePath, (req: Request, res: Response) => {
+    adapter.processActivity(req, res, iMController)
   })
 
   return router
