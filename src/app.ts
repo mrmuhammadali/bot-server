@@ -26,7 +26,7 @@ import * as homeController from './controllers/home'
 import * as userController from './controllers/user'
 import * as apiController from './controllers/api'
 import * as contactController from './controllers/contact'
-import { EchoBot } from './controllers/bot'
+import { getBotTurnController } from './controllers/gitBot'
 
 // API keys and Passport configuration
 import * as passportConfig from './config/passport'
@@ -65,15 +65,16 @@ const memoryStorage: MemoryStorage = new MemoryStorage()
 const conversationState: ConversationState = new ConversationState(
   memoryStorage,
 )
-const bot = new EchoBot(conversationState)
 const botFrameworkConfig: BotFrameworkConfig = {
   iMRoutePath: '/api/messages',
   appCredentials: { appId: '', appPassword: '' },
+  welcomeMessage: 'Welcome <%= user %>'
 }
+const onTurn = getBotTurnController(conversationState)
 app.use(
   setupIMRoute(botFrameworkConfig, conversationState, async turnContext => {
     // Call bot.onTurn() to handle all incoming messages.
-    await bot.onTurn(turnContext)
+    await onTurn(turnContext)
   }),
 )
 app.use(

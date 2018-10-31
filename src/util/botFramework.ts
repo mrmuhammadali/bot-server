@@ -1,6 +1,48 @@
 // libs
-import { BotFrameworkAdapter, ConversationState, TurnContext } from 'botbuilder'
+import {
+  ActivityTypes,
+  BotFrameworkAdapter,
+  ConversationState,
+  TurnContext,
+} from 'botbuilder'
+import foreach from 'lodash/fp/foreach'
 import { Request, Response, Router } from 'express'
+import size from 'lodash/fp/size'
+import template from 'lodash/fp/template'
+
+/**
+ * Send a welcome message along with suggested actions for the user to click.
+ * @param {TurnContext} turnContext A TurnContext instance containing all the data needed for processing this conversation turn.
+ */
+async function sendStartupMessage(
+  turnContext: TurnContext,
+  startupMessage?: string,
+) {
+  const { membersAdded = [] } = turnContext.activity
+
+  if (startupMessage && size(membersAdded) === 1) {
+    await turnContext.sendActivity(startupMessage)
+  }
+}
+
+async function sendWelcomeMessage(
+  turnContext: TurnContext,
+  welcomeMessage?: string,
+) {
+  const {
+    membersAdded = [],
+    recipient: { id: recipientId },
+  } = turnContext.activity
+
+  if (welcomeMessage) {
+    foreach(async ({ id, name }) => {
+      if (id !== recipientId) {
+        const compiled = template(welcomeMessage)
+        await turnContext.sendActivity(compiled({ user: name }))
+      }
+    })(membersAdded)
+  }
+}
 
 type AppCredentials = { appId: string; appPassword: string }
 
@@ -26,6 +68,8 @@ export function getBotFrameworkAdapter(
 export type BotFrameworkConfig = {
   appCredentials: AppCredentials
   iMRoutePath: string
+  welcomeMessage?: string
+  startupMessage?: string
 }
 
 export function setupIMRoute(
@@ -33,14 +77,26 @@ export function setupIMRoute(
   conversationState: ConversationState,
   iMController: (turnContext: TurnContext) => Promise<any>,
 ): Router {
-  const { iMRoutePath, appCredentials } = botFrameworkConfig
+  const {
+    iMRoutePath,
+    appCredentials,
+    welcomeMessage,
+    startupMessage,
+  } = botFrameworkConfig
   const adapter: BotFrameworkAdapter = getBotFrameworkAdapter(
     appCredentials,
     conversationState,
   )
   const router = Router()
   router.post(iMRoutePath, (req: Request, res: Response) => {
-    adapter.processActivity(req, res, iMController)
+    adapter.processActivity(req, res, async (turnContext: TurnContext) => {
+      if (turnContext.activity.type === ActivityTypes.ConversationUpdate) {
+        await sendStartupMessage(turnContext, startupMessage)
+        await sendWelcomeMessage(turnContext, welcomeMessage)
+      }
+
+      await iMController(turnContext)
+    })
   })
 
   return router
