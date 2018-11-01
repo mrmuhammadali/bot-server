@@ -79,30 +79,24 @@ export function getBotFrameworkAdapter(
 }
 
 export type BotFrameworkConfig = {
-  appCredentials: AppCredentials
   iMRoutePath?: string
   welcomeMessage?: string
   startupMessage?: string
 }
 
 export function setupIMRoute(
-  botFrameworkConfig: BotFrameworkConfig,
   iMController: (turnContext: TurnContext) => Promise<any>,
-  conversationState?: ConversationState,
+  botAdapter: BotFrameworkAdapter,
+  botFrameworkConfig: BotFrameworkConfig = {},
 ): Router {
   const {
-    appCredentials,
     iMRoutePath = '/api/messages',
     welcomeMessage,
     startupMessage,
   } = botFrameworkConfig
-  const adapter: BotFrameworkAdapter = getBotFrameworkAdapter(
-    appCredentials,
-    conversationState,
-  )
-  const router = Router()
-  router.post(iMRoutePath, (req: Request, res: Response) => {
-    adapter.processActivity(req, res, async (turnContext: TurnContext) => {
+
+  return Router().post(iMRoutePath, (req: Request, res: Response) => {
+    botAdapter.processActivity(req, res, async (turnContext: TurnContext) => {
       if (turnContext.activity.type === ActivityTypes.ConversationUpdate) {
         await sendStartupMessage(turnContext, startupMessage)
         await sendWelcomeMessage(turnContext, welcomeMessage)
@@ -111,6 +105,4 @@ export function setupIMRoute(
       await iMController(turnContext)
     })
   })
-
-  return router
 }

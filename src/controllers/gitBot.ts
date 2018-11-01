@@ -31,6 +31,7 @@ export function getBotTurnController(conversationState: ConversationState) {
         conversation: { id: conversationId },
       } = turnContext.activity
       const actionType = trim(toLower(text))
+      console.log(turnContext.activity)
 
       switch (actionType) {
         case ActionTypes.CONNECT:
@@ -40,7 +41,7 @@ export function getBotTurnController(conversationState: ConversationState) {
             client_id: process.env.GITLAB_CLIENT_ID,
             // Change it when subdomain changes
             redirect_uri: 'https://4a86645b.ngrok.io/auth_callback',
-            state: conversationId,
+            state: JSON.stringify(turnContext),
           }
           await connect(
             turnContext,

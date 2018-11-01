@@ -13,8 +13,17 @@ import passport from 'passport'
 import expressValidator from 'express-validator'
 import bluebird from 'bluebird'
 import { MONGODB_URI, SESSION_SECRET } from './util/secrets'
-import { setupIMRoute, BotFrameworkConfig } from './util/botFramework'
-import { MemoryStorage, ConversationState, TurnContext } from 'botbuilder'
+import {
+  BotFrameworkConfig,
+  getBotFrameworkAdapter,
+  setupIMRoute,
+} from './util/botFramework'
+import {
+  BotFrameworkAdapter,
+  ConversationState,
+  MemoryStorage,
+  TurnContext,
+} from 'botbuilder'
 
 const MongoStore = mongo(session)
 
@@ -27,6 +36,7 @@ import * as userController from './controllers/user'
 import * as apiController from './controllers/api'
 import * as contactController from './controllers/contact'
 import { getBotTurnController } from './controllers/gitBot'
+import { setupAuthCallbackRoute } from './util/oauth'
 
 // API keys and Passport configuration
 import * as passportConfig from './config/passport'
@@ -60,25 +70,30 @@ app.use(compression())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(expressValidator())
-// setting up botframework route
+// setting up botframework incoming messages route
 const memoryStorage: MemoryStorage = new MemoryStorage()
 const conversationState: ConversationState = new ConversationState(
   memoryStorage,
 )
-const botFrameworkConfig: BotFrameworkConfig = {
-  appCredentials: {
-    appId: process.env.GITLAB_BOT_APP_ID,
-    appPassword: process.env.GITLAB_BOT_APP_PASSWORD,
-  },
-  welcomeMessage: 'Welcome <%= user %>',
-  startupMessage: 'Startup',
+const gitlabBotAppCreds = {
+  appId: process.env.GITLAB_BOT_APP_ID,
+  appPassword: process.env.GITLAB_BOT_APP_PASSWORD,
 }
+const botAdapter: BotFrameworkAdapter = getBotFrameworkAdapter(
+  gitlabBotAppCreds,
+  conversationState,
+)
 const onTurn = getBotTurnController(conversationState)
 const iMController = async (turnContext: TurnContext) => {
   // Call onTurn() to handle all incoming messages.
   await onTurn(turnContext)
 }
-app.use(setupIMRoute(botFrameworkConfig, iMController, conversationState))
+const botFrameworkConfig: BotFrameworkConfig = {
+  welcomeMessage: 'Welcome <%= user %>',
+  startupMessage: 'Startup',
+}
+app.use(setupIMRoute(iMController, botAdapter, botFrameworkConfig))
+app.use(setupAuthCallbackRoute(botAdapter, gitlabBotAppCreds.appId))
 
 app.use(
   session({
