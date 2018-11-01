@@ -5,7 +5,7 @@ import {
   ConversationState,
   TurnContext,
 } from 'botbuilder'
-import foreach from 'lodash/fp/foreach'
+import forEach from 'lodash/fp/forEach'
 import { Request, Response, Router } from 'express'
 import some from 'lodash/fp/some'
 import template from 'lodash/fp/template'
@@ -39,7 +39,7 @@ async function sendWelcomeMessage(
   } = turnContext.activity
 
   if (welcomeMessage) {
-    foreach(async ({ id, name }) => {
+    forEach(async ({ id, name }) => {
       if (id !== botId) {
         const compiled = template(welcomeMessage)
         await turnContext.sendActivity(compiled({ user: name }))
