@@ -7,7 +7,7 @@ import {
 } from 'botbuilder'
 import foreach from 'lodash/fp/foreach'
 import { Request, Response, Router } from 'express'
-import size from 'lodash/fp/size'
+import some from 'lodash/fp/some'
 import template from 'lodash/fp/template'
 
 /**
@@ -18,9 +18,13 @@ async function sendStartupMessage(
   turnContext: TurnContext,
   startupMessage?: string,
 ) {
-  const { membersAdded = [] } = turnContext.activity
+  const {
+    membersAdded = [],
+    recipient: { id: botId },
+  } = turnContext.activity
+  const isBotAdded = some(['id', botId])(membersAdded)
 
-  if (startupMessage && size(membersAdded) === 1) {
+  if (startupMessage && isBotAdded) {
     await turnContext.sendActivity(startupMessage)
   }
 }
@@ -31,12 +35,12 @@ async function sendWelcomeMessage(
 ) {
   const {
     membersAdded = [],
-    recipient: { id: recipientId },
+    recipient: { id: botId },
   } = turnContext.activity
 
   if (welcomeMessage) {
     foreach(async ({ id, name }) => {
-      if (id !== recipientId) {
+      if (id !== botId) {
         const compiled = template(welcomeMessage)
         await turnContext.sendActivity(compiled({ user: name }))
       }
@@ -91,6 +95,8 @@ export function setupIMRoute(
   router.post(iMRoutePath, (req: Request, res: Response) => {
     adapter.processActivity(req, res, async (turnContext: TurnContext) => {
       if (turnContext.activity.type === ActivityTypes.ConversationUpdate) {
+        console.log('activity===>', turnContext.activity)
+
         await sendStartupMessage(turnContext, startupMessage)
         await sendWelcomeMessage(turnContext, welcomeMessage)
       }

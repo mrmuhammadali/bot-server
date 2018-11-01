@@ -68,12 +68,13 @@ const conversationState: ConversationState = new ConversationState(
 const botFrameworkConfig: BotFrameworkConfig = {
   iMRoutePath: '/api/messages',
   appCredentials: { appId: '', appPassword: '' },
-  welcomeMessage: 'Welcome <%= user %>'
+  welcomeMessage: 'Welcome <%= user %>',
+  startupMessage: 'Startup',
 }
 const onTurn = getBotTurnController(conversationState)
 app.use(
   setupIMRoute(botFrameworkConfig, conversationState, async turnContext => {
-    // Call bot.onTurn() to handle all incoming messages.
+    // Call onTurn() to handle all incoming messages.
     await onTurn(turnContext)
   }),
 )
