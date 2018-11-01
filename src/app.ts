@@ -14,7 +14,7 @@ import expressValidator from 'express-validator'
 import bluebird from 'bluebird'
 import { MONGODB_URI, SESSION_SECRET } from './util/secrets'
 import { setupIMRoute, BotFrameworkConfig } from './util/botFramework'
-import { MemoryStorage, ConversationState } from 'botbuilder'
+import { MemoryStorage, ConversationState, TurnContext } from 'botbuilder'
 
 const MongoStore = mongo(session)
 
@@ -66,18 +66,20 @@ const conversationState: ConversationState = new ConversationState(
   memoryStorage,
 )
 const botFrameworkConfig: BotFrameworkConfig = {
-  iMRoutePath: '/api/messages',
-  appCredentials: { appId: '', appPassword: '' },
+  appCredentials: {
+    appId: process.env.GITLAB_BOT_APP_ID,
+    appPassword: process.env.GITLAB_BOT_APP_PASSWORD,
+  },
   welcomeMessage: 'Welcome <%= user %>',
   startupMessage: 'Startup',
 }
 const onTurn = getBotTurnController(conversationState)
-app.use(
-  setupIMRoute(botFrameworkConfig, conversationState, async turnContext => {
-    // Call onTurn() to handle all incoming messages.
-    await onTurn(turnContext)
-  }),
-)
+const iMController = async (turnContext: TurnContext) => {
+  // Call onTurn() to handle all incoming messages.
+  await onTurn(turnContext)
+}
+app.use(setupIMRoute(botFrameworkConfig, iMController, conversationState))
+
 app.use(
   session({
     resave: true,

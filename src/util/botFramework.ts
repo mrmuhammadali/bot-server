@@ -11,8 +11,9 @@ import some from 'lodash/fp/some'
 import template from 'lodash/fp/template'
 
 /**
- * Send a welcome message along with suggested actions for the user to click.
- * @param {TurnContext} turnContext A TurnContext instance containing all the data needed for processing this conversation turn.
+ * Send a custom startup message when this bot is added in a group.
+ * @param {TurnContext} turnContext A TurnContext instance for sending this message.
+ * @param {string} startupMessage A custom startup message.
  */
 async function sendStartupMessage(
   turnContext: TurnContext,
@@ -29,6 +30,11 @@ async function sendStartupMessage(
   }
 }
 
+/**
+ * Send a custom welcome message when a new user added in a group.
+ * @param {TurnContext} turnContext A TurnContext instance for sending this message.
+ * @param {string} welcomeMessage A custom welcome message.
+ */
 async function sendWelcomeMessage(
   turnContext: TurnContext,
   welcomeMessage?: string,
@@ -52,7 +58,7 @@ type AppCredentials = { appId: string; appPassword: string }
 
 export function getBotFrameworkAdapter(
   appCredentials: AppCredentials,
-  conversationState: ConversationState,
+  conversationState?: ConversationState,
 ): BotFrameworkAdapter {
   const adapter: BotFrameworkAdapter = new BotFrameworkAdapter(appCredentials)
 
@@ -61,9 +67,12 @@ export function getBotFrameworkAdapter(
     console.error(`\n [onTurnError]: ${error}`)
     // Send a message to the user.
     turnContext.sendActivity(`Oops. Something went wrong!`)
-    // Clear out state and save changes so the user is not stuck in a bad state.
-    await conversationState.clear(turnContext)
-    await conversationState.saveChanges(turnContext)
+
+    if (conversationState) {
+      // Clear out state and save changes so the user is not stuck in a bad state.
+      await conversationState.clear(turnContext)
+      await conversationState.saveChanges(turnContext)
+    }
   }
 
   return adapter
@@ -71,19 +80,19 @@ export function getBotFrameworkAdapter(
 
 export type BotFrameworkConfig = {
   appCredentials: AppCredentials
-  iMRoutePath: string
+  iMRoutePath?: string
   welcomeMessage?: string
   startupMessage?: string
 }
 
 export function setupIMRoute(
   botFrameworkConfig: BotFrameworkConfig,
-  conversationState: ConversationState,
   iMController: (turnContext: TurnContext) => Promise<any>,
+  conversationState?: ConversationState,
 ): Router {
   const {
-    iMRoutePath,
     appCredentials,
+    iMRoutePath = '/api/messages',
     welcomeMessage,
     startupMessage,
   } = botFrameworkConfig
@@ -95,8 +104,6 @@ export function setupIMRoute(
   router.post(iMRoutePath, (req: Request, res: Response) => {
     adapter.processActivity(req, res, async (turnContext: TurnContext) => {
       if (turnContext.activity.type === ActivityTypes.ConversationUpdate) {
-        console.log('activity===>', turnContext.activity)
-
         await sendStartupMessage(turnContext, startupMessage)
         await sendWelcomeMessage(turnContext, welcomeMessage)
       }

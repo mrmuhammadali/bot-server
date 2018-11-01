@@ -1,5 +1,5 @@
 {
-  "name": "express-typescript-starter",
+  "name": "bot-server",
   "version": "0.1.0",
   "description": "A starting point for Node.js express apps with TypeScript",
   "repository": {
@@ -52,6 +52,7 @@
     "pug": "^2.0.0-rc.4",
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
+    "url-search-params": "^1.1.0",
     "winston": "^2.4.0"
   },
   "devDependencies": {
@@ -80,6 +81,7 @@
     "@types/request": "^2.47.0",
     "@types/shelljs": "^0.7.8",
     "@types/supertest": "^2.0.4",
+    "@types/url-search-params": "^0.10.2",
     "@types/winston": "^2.3.7",
     "chai": "^4.1.2",
     "concurrently": "^3.5.1",
