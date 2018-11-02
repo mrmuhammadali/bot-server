@@ -7,24 +7,32 @@ import toLower from 'lodash/fp/toLower'
 import trim from 'lodash/fp/trim'
 
 // src
+import * as ActionTypes from '../constants/botActionTypes'
 import { AppCredentials, getTurnContext } from '../util/botFramework'
 import { AuthCallbackController } from '../util/oauth'
-
-const ActionTypes = {
-  CONNECT: 'connect',
-  CONNECT_GITLAB: 'connect gitlab bot',
-}
+import {
+  GITLAB_AUTH_CALLBACK_URL,
+  GITLAB_AUTH_CODE_URL,
+  GITLAB_CLIENT_ID,
+} from '../constants'
 
 export function getAuthCallbackController(
   appCredentials: AppCredentials,
 ): AuthCallbackController {
-  return (req: Request, res: Response, tokenResponse: Object) => {
+  return (req: Request, res: Response, tokenPromise: Promise<Object>) => {
     const conversationId = getOr('', 'state')(req.query)
     const { appId } = appCredentials
     const turnContext: TurnContext = getTurnContext(
       appCredentials,
       conversationId,
     )
+    tokenPromise
+      .then(token => {
+        turnContext.sendActivity(token)
+      })
+      .catch(error => {
+        turnContext.sendActivity("Couldn't authenticate.")
+      })
     res.redirect(`https://join.skype.com/bot/${appId}`)
   }
 }
@@ -51,21 +59,18 @@ export function getBotTurnController(conversationState: ConversationState) {
         conversation: { id: conversationId },
       } = turnContext.activity
       const actionType = trim(toLower(text))
-      console.log(turnContext.activity)
 
       switch (actionType) {
         case ActionTypes.CONNECT:
         case ActionTypes.CONNECT_GITLAB: {
-          const hostUrl = 'https://gitlab.com/oauth/authorize'
           const authCodeUrlParams: AuthCodeUrlParams = {
-            client_id: process.env.GITLAB_CLIENT_ID,
-            // Change it when subdomain changes
-            redirect_uri: 'https://fb15ad71.ngrok.io/api/auth_callback',
+            client_id: GITLAB_CLIENT_ID,
+            redirect_uri: GITLAB_AUTH_CALLBACK_URL,
             state: conversationId,
           }
           await connect(
             turnContext,
-            hostUrl,
+            GITLAB_AUTH_CODE_URL,
             authCodeUrlParams,
           )
           break

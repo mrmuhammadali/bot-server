@@ -1,9 +1,13 @@
 // libs
 import getOr from 'lodash/fp/getOr'
+import { post as requestPost, RequestResponse } from 'request'
+import { promisify } from 'util'
 import { Request, Response, Router } from 'express'
 import URLSearchParams from 'url-search-params'
 
 // src
+
+const requestPostAsync: any = promisify(requestPost)
 
 export type AuthCodeUrlParams = {
   client_id: string
@@ -30,8 +34,6 @@ export type AuthCallbackController = (
   tokenResponse: Object,
 ) => void
 
-type AccessTokenUrl = string
-
 export type AccessTokenParams = {
   redirect_uri?: string
   client_id: string
@@ -40,10 +42,9 @@ export type AccessTokenParams = {
   grant_type?: string
 }
 
-// TODO: get token response by using auth code
 export function setupAuthCallbackRoute(
   controller: AuthCallbackController,
-  accessTokenUrl: AccessTokenUrl,
+  accessTokenUrl: string,
   params: AccessTokenParams,
   path?: string,
 ) {
@@ -60,6 +61,11 @@ export function setupAuthCallbackRoute(
       ...params,
     }).toString()
 
-    controller(req, res, {})
+    const tokenPromise = requestPostAsync({
+      url: accessTokenUrl,
+      body: query,
+    }).then((tokenResponse: RequestResponse) => tokenResponse.body)
+
+    controller(req, res, tokenPromise)
   })
 }
