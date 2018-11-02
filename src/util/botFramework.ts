@@ -1,6 +1,8 @@
 // libs
 import {
+  Activity,
   ActivityTypes,
+  RoleTypes,
   BotFrameworkAdapter,
   ConversationState,
   TurnContext,
@@ -54,7 +56,25 @@ async function sendWelcomeMessage(
   }
 }
 
-type AppCredentials = { appId: string; appPassword: string }
+export type AppCredentials = { appId: string; appPassword: string }
+
+export function getTurnContext(
+  appCredentials: AppCredentials,
+  conversationId: string,
+): TurnContext {
+  const botAdapter: BotFrameworkAdapter = new BotFrameworkAdapter(
+    appCredentials,
+  )
+  const { appId } = appCredentials
+  const activity: Partial<Activity> = {
+    type: ActivityTypes.Message,
+    serviceUrl: 'https://smba.trafficmanager.net/apis/',
+    conversation: { id: conversationId },
+    from: { id: appId, role: RoleTypes.Bot },
+  }
+
+  return new TurnContext(botAdapter, activity)
+}
 
 export function getBotFrameworkAdapter(
   appCredentials: AppCredentials,

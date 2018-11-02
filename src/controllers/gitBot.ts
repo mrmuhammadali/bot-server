@@ -1,12 +1,32 @@
 // libs
 import { ActivityTypes, ConversationState, TurnContext } from 'botbuilder'
 import { AuthCodeUrlParams, getAuthCodeUrl } from '../util/oauth'
+import getOr from 'lodash/fp/getOr'
+import { Request, Response } from 'express'
 import toLower from 'lodash/fp/toLower'
 import trim from 'lodash/fp/trim'
+
+// src
+import { AppCredentials, getTurnContext } from '../util/botFramework'
+import { AuthCallbackController } from '../util/oauth'
 
 const ActionTypes = {
   CONNECT: 'connect',
   CONNECT_GITLAB: 'connect gitlab bot',
+}
+
+export function getAuthCallbackController(
+  appCredentials: AppCredentials,
+): AuthCallbackController {
+  return (req: Request, res: Response, tokenResponse: Object) => {
+    const conversationId = getOr('', 'state')(req.query)
+    const { appId } = appCredentials
+    const turnContext: TurnContext = getTurnContext(
+      appCredentials,
+      conversationId,
+    )
+    res.redirect(`https://join.skype.com/bot/${appId}`)
+  }
 }
 
 async function connect(
@@ -40,8 +60,8 @@ export function getBotTurnController(conversationState: ConversationState) {
           const authCodeUrlParams: AuthCodeUrlParams = {
             client_id: process.env.GITLAB_CLIENT_ID,
             // Change it when subdomain changes
-            redirect_uri: 'https://4a86645b.ngrok.io/auth_callback',
-            state: JSON.stringify(turnContext),
+            redirect_uri: 'https://880c386b.ngrok.io/auth_callback',
+            state: conversationId,
           }
           await connect(
             turnContext,

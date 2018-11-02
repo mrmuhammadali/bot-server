@@ -1,11 +1,4 @@
 // libs
-import {
-  Activity,
-  ActivityTypes,
-  BotFrameworkAdapter,
-  RoleTypes,
-  TurnContext,
-} from 'botbuilder'
 import getOr from 'lodash/fp/getOr'
 import { Request, Response, Router } from 'express'
 import URLSearchParams from 'url-search-params'
@@ -32,42 +25,22 @@ export function getAuthCodeUrl(
   return `${hostUrl}?${query}`
 }
 
-function createActivity(conversationId: string, appId: string): Activity {
-  return {
-    type: ActivityTypes.Message,
-    serviceUrl: 'https://smba.trafficmanager.net/apis/',
-    conversation: {
-      id: conversationId,
-      isGroup: true,
-      conversationType: '',
-      name: '',
-      role: RoleTypes.User,
-    },
-    recipient: { id: conversationId, name: '', role: RoleTypes.User },
-    from: { id: appId, name: '', role: RoleTypes.Bot },
-    channelId: 'skype',
-    text: 'Hello auto',
-    label: '',
-    valueType: '',
-  }
-}
+export type AuthCallbackController = (
+  request: Request,
+  response: Response,
+  tokenResponse: Object,
+) => void
 
-// TODO: complete the auth token flow
+// TODO: get token response by using auth code
 export function setupAuthCallbackRoute(
-  botAdapter: BotFrameworkAdapter,
-  botAppId: string,
+  authCallBackController: AuthCallbackController,
   path?: string,
 ) {
   return Router().get(
     path || '/api/auth_callback',
     (req: Request, res: Response) => {
       const authCode = getOr('', 'code')(req.query)
-      const conversationId = getOr('', 'state')(req.query)
-      const turnContext: TurnContext = new TurnContext(
-        botAdapter,
-        createActivity(conversationId, botAppId),
-      )
-      turnContext.sendActivity('Hi auto')
+      authCallBackController(req, res, {})
     },
   )
 }

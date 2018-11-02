@@ -35,7 +35,10 @@ import * as homeController from './controllers/home'
 import * as userController from './controllers/user'
 import * as apiController from './controllers/api'
 import * as contactController from './controllers/contact'
-import { getBotTurnController } from './controllers/gitBot'
+import {
+  getAuthCallbackController,
+  getBotTurnController,
+} from './controllers/gitBot'
 import { setupAuthCallbackRoute } from './util/oauth'
 
 // API keys and Passport configuration
@@ -93,7 +96,9 @@ const botFrameworkConfig: BotFrameworkConfig = {
   startupMessage: 'Startup',
 }
 app.use(setupIMRoute(iMController, botAdapter, botFrameworkConfig))
-app.use(setupAuthCallbackRoute(botAdapter, gitlabBotAppCreds.appId))
+// setting up auth callback route for gitBot
+const authCallbackController = getAuthCallbackController(gitlabBotAppCreds)
+app.use(setupAuthCallbackRoute(authCallbackController))
 
 app.use(
   session({
