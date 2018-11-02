@@ -1,5 +1,6 @@
 // libs
 import {
+  ActionTypes,
   ActivityTypes,
   CardFactory,
   ConversationState,
@@ -11,7 +12,7 @@ import toLower from 'lodash/fp/toLower'
 import trim from 'lodash/fp/trim'
 
 // src
-import * as ActionTypes from '../constants/botActionTypes'
+import * as BotActionTypes from '../constants/botActionTypes'
 import { AppCredentials, getTurnContext } from '../util/botFramework'
 import {
   AuthCallbackController,
@@ -59,7 +60,7 @@ async function connect(
     [cardImageUrl],
     CardFactory.actions([
       {
-        type: 'openUrl',
+        type: ActionTypes.OpenUrl,
         title: cardTitle,
         value: authCodeUrl,
       },
@@ -84,8 +85,8 @@ export function getBotTurnController(conversationState: ConversationState) {
       const actionType = trim(toLower(text))
 
       switch (actionType) {
-        case ActionTypes.CONNECT:
-        case ActionTypes.CONNECT_GITLAB: {
+        case BotActionTypes.CONNECT:
+        case BotActionTypes.CONNECT_GITLAB: {
           const authCodeUrlParams: AuthCodeUrlParams = {
             client_id: GITLAB_CLIENT_ID,
             redirect_uri: GITLAB_AUTH_CALLBACK_URL,
