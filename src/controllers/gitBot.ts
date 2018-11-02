@@ -1,6 +1,10 @@
 // libs
-import { ActivityTypes, ConversationState, TurnContext } from 'botbuilder'
-import { AuthCodeUrlParams, getAuthCodeUrl } from '../util/oauth'
+import {
+  ActivityTypes,
+  CardFactory,
+  ConversationState,
+  TurnContext,
+} from 'botbuilder'
 import getOr from 'lodash/fp/getOr'
 import { Request, Response } from 'express'
 import toLower from 'lodash/fp/toLower'
@@ -9,11 +13,16 @@ import trim from 'lodash/fp/trim'
 // src
 import * as ActionTypes from '../constants/botActionTypes'
 import { AppCredentials, getTurnContext } from '../util/botFramework'
-import { AuthCallbackController } from '../util/oauth'
+import {
+  AuthCallbackController,
+  AuthCodeUrlParams,
+  getAuthCodeUrl,
+} from '../util/oauth'
 import {
   GITLAB_AUTH_CALLBACK_URL,
   GITLAB_AUTH_CODE_URL,
   GITLAB_CLIENT_ID,
+  GITLAB_LOGO_URL,
 } from '../constants'
 
 export function getAuthCallbackController(
@@ -41,8 +50,22 @@ async function connect(
   turnContext: TurnContext,
   hostUrl: string,
   authCodeUrlParams: AuthCodeUrlParams,
+  cardTitle: string = 'Connect',
+  cardImageUrl?: string,
 ) {
-  await turnContext.sendActivity(getAuthCodeUrl(hostUrl, authCodeUrlParams))
+  const authCodeUrl = getAuthCodeUrl(hostUrl, authCodeUrlParams)
+  const signingCard = CardFactory.heroCard(
+    '',
+    [cardImageUrl],
+    CardFactory.actions([
+      {
+        type: 'openUrl',
+        title: cardTitle,
+        value: authCodeUrl,
+      },
+    ]),
+  )
+  await turnContext.sendActivity({ attachments: [signingCard] })
 }
 
 export function getBotTurnController(conversationState: ConversationState) {
@@ -72,6 +95,8 @@ export function getBotTurnController(conversationState: ConversationState) {
             turnContext,
             GITLAB_AUTH_CODE_URL,
             authCodeUrlParams,
+            'Connect Gitlab Account',
+            GITLAB_LOGO_URL,
           )
           break
         }

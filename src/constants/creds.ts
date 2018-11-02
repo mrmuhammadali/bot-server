@@ -14,3 +14,4 @@ export const GITLAB_ACCESS_TOKEN_URL = 'https://gitlab.com/oauth/token'
 export const GITLAB_AUTH_CODE_URL = 'https://gitlab.com/oauth/authorize'
 export const GITLAB_AUTH_CALLBACK_URL =
   'https://fb15ad71.ngrok.io/api/auth_callback'
+export const GITLAB_LOGO_URL = 'https://fb15ad71.ngrok.io/images/gitlab.png'
