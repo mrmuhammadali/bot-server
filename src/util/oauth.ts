@@ -16,10 +16,9 @@ export function getAuthCodeUrl(
   hostUrl: string,
   authCodeUrlParams: AuthCodeUrlParams,
 ): string {
-  const response_type = authCodeUrlParams.response_type || 'code'
   const query: string = new URLSearchParams({
+    response_type: 'code',
     ...authCodeUrlParams,
-    response_type,
   }).toString()
 
   return `${hostUrl}?${query}`
@@ -31,16 +30,36 @@ export type AuthCallbackController = (
   tokenResponse: Object,
 ) => void
 
+type AccessTokenUrl = string
+
+export type AccessTokenParams = {
+  redirect_uri?: string
+  client_id: string
+  client_secret: string
+  code?: string
+  grant_type?: string
+}
+
 // TODO: get token response by using auth code
 export function setupAuthCallbackRoute(
-  authCallBackController: AuthCallbackController,
+  controller: AuthCallbackController,
+  accessTokenUrl: AccessTokenUrl,
+  params: AccessTokenParams,
   path?: string,
 ) {
-  return Router().get(
-    path || '/api/auth_callback',
-    (req: Request, res: Response) => {
-      const authCode = getOr('', 'code')(req.query)
-      authCallBackController(req, res, {})
-    },
-  )
+  const newPath = path || '/api/auth_callback'
+  return Router().get(newPath, (req: Request, res: Response) => {
+    const http = getOr('http', 'x-forwarded-proto')(req.headers)
+    const { host } = req.headers
+    const redirect_uri = `${http}://${host}${newPath}`
+    const authCode = getOr('', 'code')(req.query)
+    const query: string = new URLSearchParams({
+      redirect_uri,
+      code: authCode,
+      grant_type: 'authorization_code',
+      ...params,
+    }).toString()
+
+    controller(req, res, {})
+  })
 }

@@ -60,7 +60,7 @@ export function getBotTurnController(conversationState: ConversationState) {
           const authCodeUrlParams: AuthCodeUrlParams = {
             client_id: process.env.GITLAB_CLIENT_ID,
             // Change it when subdomain changes
-            redirect_uri: 'https://880c386b.ngrok.io/auth_callback',
+            redirect_uri: 'https://fb15ad71.ngrok.io/api/auth_callback',
             state: conversationId,
           }
           await connect(
