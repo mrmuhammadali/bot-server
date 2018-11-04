@@ -39,7 +39,7 @@ const mongoUrl = MONGODB_URI
 mongoose
   .connect(
     mongoUrl,
-    { useMongoClient: true },
+    { useNewUrlParser: true }
   )
   .then(() => {
     /** ready to use. The `mongoose.connect()` promise resolves to undefined. */
