@@ -11,15 +11,18 @@ import {
 import { setupAuthCallbackRoute } from '../util/oauth'
 
 // setting up auth callback route for gitBot
-const authCallbackController = getAuthCallbackController(GITLAB_BOT_MS_CREDS)
+const gitlabAuthCallbackController = getAuthCallbackController(
+  GITLAB_BOT_MS_CREDS,
+)
 
 const router = Router()
 
 router.use(
   setupAuthCallbackRoute(
-    authCallbackController,
+    gitlabAuthCallbackController,
     GITLAB_ACCESS_TOKEN_URL,
     GITLAB_ACCESS_TOKEN_PARAMS,
+    '/api/gitlab/auth_callback'
   ),
 )
 

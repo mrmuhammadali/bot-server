@@ -29,6 +29,7 @@ import * as contactController from './controllers/contact'
 import * as passportConfig from './config/passport'
 import bot from './config/bot'
 import oauth from './config/oauth'
+import webhook from './config/webhook'
 
 // Create Express server
 const app = express()
@@ -39,7 +40,7 @@ const mongoUrl = MONGODB_URI
 mongoose
   .connect(
     mongoUrl,
-    { useNewUrlParser: true }
+    { useNewUrlParser: true },
   )
   .then(() => {
     /** ready to use. The `mongoose.connect()` promise resolves to undefined. */
@@ -61,6 +62,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(expressValidator())
 app.use(bot)
 app.use(oauth)
+app.use(webhook)
 
 app.use(
   session({
