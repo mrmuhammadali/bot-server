@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 export type Subscription = {
   url: string,
   name: string,
+  projectId: string,
 }
 
 export type Chat = mongoose.Document & {
@@ -20,7 +21,11 @@ const chatSchema = new mongoose.Schema({
   platformType: String,
   accessToken: String,
   refreshToken: String,
-  subscriptions: Array,
+  subscriptions: [{
+    url: String,
+    name: String,
+    projectId: String,
+  }],
 }, { timestamps: true })
 
 export const Chat = mongoose.model<Chat>('Chat', chatSchema)
