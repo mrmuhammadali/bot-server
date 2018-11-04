@@ -47,7 +47,13 @@ export default function gitlabWebhookController(req: Request, res: Response) {
       // TODO: 1. get conversations by using projectId
       // 2. get turnContext by using those converationIds
       // 3. send push response to those conversations in Adaptive card
-
+      const turnContext: TurnContext = getTurnContext(
+        GITLAB_BOT_MS_CREDS,
+        'REPLACE_WITH_CONVERSATION_ID',
+      )
+      turnContext.sendActivity({
+        attachments: [CardFactory.adaptiveCard(pushResponse)],
+      })
       break
     }
     default:
