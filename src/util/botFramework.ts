@@ -69,10 +69,14 @@ export function getTurnContext(
   const activity: Partial<Activity> = {
     type: ActivityTypes.Message,
     serviceUrl: 'https://smba.trafficmanager.net/apis/',
-    // TODO: Check the type of conversation below and add the missing props here
-    conversation: { id: conversationId },
-    // TODO: Add appropriate name in the object below to fix type issues for instance: from: { id: appId, name: 'Some Name', role: RoleTypes.Bot },
-    from: { id: appId, role: RoleTypes.Bot },
+    conversation: {
+      id: conversationId,
+      role: RoleTypes.User,
+      name: '',
+      isGroup: false,
+      conversationType: '',
+    },
+    from: { id: appId, role: RoleTypes.Bot, name: '' },
   }
 
   return new TurnContext(botAdapter, activity)
