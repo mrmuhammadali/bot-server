@@ -38,6 +38,7 @@ export function getAuthCallbackController(
     )
     tokenPromise
       .then(token => {
+        // TODO: store token info and inform user afterwards
         turnContext.sendActivity(token)
       })
       .catch(error => {

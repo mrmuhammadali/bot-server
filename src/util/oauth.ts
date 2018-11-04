@@ -48,11 +48,11 @@ export function setupAuthCallbackRoute(
   params: AccessTokenParams,
   path?: string,
 ) {
-  const newPath = path || '/api/auth_callback'
-  return Router().get(newPath, (req: Request, res: Response) => {
-    const http = getOr('http', 'x-forwarded-proto')(req.headers)
-    const { host } = req.headers
-    const redirect_uri = `${http}://${host}${newPath}`
+  const routePath = path || '/api/auth_callback'
+
+  return Router().get(routePath, (req: Request, res: Response) => {
+    const { host, 'x-forwarded-proto': protocol = 'http' } = req.headers
+    const redirect_uri = `${protocol}://${host}${routePath}`
     const authCode = getOr('', 'code')(req.query)
     const query: string = new URLSearchParams({
       redirect_uri,
