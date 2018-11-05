@@ -25,13 +25,8 @@ function getCommitMessage(commit: Commit): Object {
   } = commit
 
   return {
-    type: 'Container',
-    items: [
-      {
-        type: 'TextBlock',
-        text: `[${id.substr(0, 8)}](${url}) by ${startCase(name)} - ${message}`,
-      },
-    ],
+    type: 'TextBlock',
+    text: `[${id.substr(0, 8)}](${url}) by ${startCase(name)} - ${message}`,
   }
 }
 
@@ -52,7 +47,7 @@ export function getPushResponse(
 
   const viewMoreAction = {
     type: 'Action.ShowCard',
-    title: 'View More',
+    title: 'View Previous Commits',
     card: {
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       type: 'AdaptiveCard',
@@ -60,16 +55,7 @@ export function getPushResponse(
       body: [
         {
           type: 'Container',
-          items: [
-            {
-              type: 'TextBlock',
-              text: `Previous ${size(
-                remainingCommits,
-              )} commit${getSingleOrPlural(size(remainingCommits))}:`,
-              weight: 'Bolder',
-            },
-            ...remainingCommits,
-          ],
+          items: remainingCommits,
         },
       ],
     },
