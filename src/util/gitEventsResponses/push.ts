@@ -1,7 +1,7 @@
 // libs
 import lowerCase from 'lodash/fp/lowerCase'
 import size from 'lodash/fp/size'
-import slice from 'lodash/fp/slice'
+import slice from 'lodash/slice'
 import startCase from 'lodash/fp/startCase'
 import toString from 'lodash/fp/toString'
 
@@ -23,13 +23,14 @@ function getCommitMessage(commit: Commit): Object {
     author: { name },
     url,
   } = commit
-  const text = `[${id.substr(0, 8)}](${url}) - ${message}`
 
   return {
     type: 'Container',
     items: [
-      { type: 'TextBlock', text },
-      { type: 'TextBlock', text: startCase(name) },
+      {
+        type: 'TextBlock',
+        text: `[${id.substr(0, 8)}](${url}) by ${startCase(name)} - ${message}`,
+      },
     ],
   }
 }
@@ -47,10 +48,7 @@ export function getPushResponse(
   projectUrl: string,
   compareChangesUrl: string,
 ) {
-  const remainingCommits = slice(1)(size(commits))(commits).map(
-    getCommitMessage,
-  )
-  console.log(remainingCommits)
+  const remainingCommits = slice(commits, 1).map(getCommitMessage)
 
   const viewMoreAction = {
     type: 'Action.ShowCard',
@@ -61,13 +59,18 @@ export function getPushResponse(
       style: 'emphasis',
       body: [
         {
-          type: 'TextBlock',
-          text: `Last ${size(remainingCommits)} commit${getSingleOrPlural(
-            size(remainingCommits),
-          )}:`,
-          weight: 'Bolder',
+          type: 'Container',
+          items: [
+            {
+              type: 'TextBlock',
+              text: `Previous ${size(
+                remainingCommits,
+              )} commit${getSingleOrPlural(size(remainingCommits))}:`,
+              weight: 'Bolder',
+            },
+            ...remainingCommits,
+          ],
         },
-        ...remainingCommits,
       ],
     },
   }
@@ -148,7 +151,7 @@ export function getPushResponse(
               },
               {
                 title: 'Project:',
-                value: `[projectFullName](${projectUrl})`,
+                value: `[${projectFullName}](${projectUrl})`,
               },
             ],
           },

@@ -1,7 +1,7 @@
 // libs
 import { CardFactory, TurnContext } from 'botbuilder'
 import { Request, Response } from 'express'
-import reverse from 'lodash/fp/reverse'
+import orderBy from 'lodash/orderBy'
 
 // src
 import * as EventTypes from '../constants/gitlabEventTypes'
@@ -38,18 +38,19 @@ export default function gitlabWebhookController(req: Request, res: Response) {
         totalCommitsCount,
         branch,
         projectFullPath,
-        reverse(commits),
+        orderBy(commits, 'timestamp', 'desc'),
         userPicUrl,
         userProfileUrl,
         webUrl,
         compareChangesUrl,
       )
+
       // TODO: 1. get conversations by using projectId
       // 2. get turnContext by using those converationIds
       // 3. send push response to those conversations in Adaptive card
       const turnContext: TurnContext = getTurnContext(
         GITLAB_BOT_MS_CREDS,
-        'REPLACE_WITH_CONVERSATION_ID',
+        '29:1izxgeDK6McZ5AWzHoOt4zrxFw3dz92WHWuRrMW19SNGhnwhfQAuo710fgll4sdn4',
       )
       turnContext.sendActivity({
         attachments: [CardFactory.adaptiveCard(pushResponse)],
